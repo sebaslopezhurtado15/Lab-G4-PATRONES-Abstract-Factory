@@ -13,6 +13,8 @@
 #include "PlataformaDestructible.h"
 // Singleton enemigo
 #include "Enemigo.h"
+// Factory Method
+#include "FabricaPlataformas.h"
 
 AAventuraUSFX022026L4GameMode::AAventuraUSFX022026L4GameMode()
 {
@@ -53,19 +55,23 @@ void AAventuraUSFX022026L4GameMode::BeginPlay()
 	aPlataformas.Reserve(CantidadPlataformas);
 	APlataforma* PlataformaActual = nullptr;
 
+	// Crea una instancia de la fabrica de plataformas
+	AFabricaPlataformas* Fabrica = World->SpawnActor<AFabricaPlataformas>(FVector::ZeroVector, FRotator::ZeroRotator, Parametros);
+
 	//Factory Method
 	for (int i = 0; i < CantidadPlataformas; i++)
 	{
 		int IndiceAleatorio = FMath::RandRange(0, PosicionesDisponibles.Num() - 1);
 		FVector SpawnLocation = PosicionesDisponibles[IndiceAleatorio];
 		int TipoAleatorio = FMath::RandRange(0, 1);
-		PlataformaActual = APlataforma::CrearPlataforma(World,TipoAleatorio,SpawnLocation,Rotacion);
+		PlataformaActual = Fabrica->CrearPlataforma(TipoAleatorio, SpawnLocation, Rotacion);
 		if (IsValid(PlataformaActual))
 		{
 			aPlataformas.Add(PlataformaActual);
 		}
 		PosicionesDisponibles.RemoveAt(IndiceAleatorio);
 	}
+
 	/*antes para plataforma 5 o 20
 	for (int i = 0; i < CantidadPlataformas; i++)
 	{

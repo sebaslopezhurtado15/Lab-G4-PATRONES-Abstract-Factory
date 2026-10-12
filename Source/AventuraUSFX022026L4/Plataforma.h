@@ -11,10 +11,6 @@
 
 class UStaticMeshComponent;
 
-//Factory Method
-class UWorld;
-
-
 enum class ETipoPlataforma
 {
 	PLATAFORMA_TERRESTRE,
@@ -33,10 +29,6 @@ public:
 	APlataforma();
 
 	virtual void Tick(float DeltaTime) override;
-
-	// Factory Method
-	static APlataforma* CrearPlataforma(UWorld* World,int Tipo,const FVector& Posicion,const FRotator& Rotacion);
-
 
 	// Asigna uno de los 10 tipos de movimiento
 	void ConfigurarMovimiento(int Tipo);
