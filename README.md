@@ -1,739 +1,431 @@
-# PATRÓN FACTORY METHOD — SIS457 - Grupo 4
+# PATRÓN ABSTRACT FACTORY — SIS457 - Grupo 4
 
-Proyecto desarrollado en **Unreal Engine 4.27.2** utilizando **C++**.
+Proyecto desarrollado en **Unreal Engine 4.27.2** utilizando **C++**, como parte de las prácticas de patrones de diseño de la materia **SIS457 — USFX**.
 
-Este trabajo implementa el patrón de diseño **Factory Method** tomando como referencia el ejemplo **“Boil and Bubble, Brew and Bottle… Factory Method”** del libro *Unreal Engine 5 Game Programming Design Patterns in C++, Java, C#, and Blueprints*.
+Este trabajo incorpora el patrón de creación **Abstract Factory (Fábrica Abstracta)** al proyecto **AventuraUSFX022026L4**. La práctica continúa la implementación anterior de **Factory Method**, ampliando la organización de las fábricas mediante las clases **FabricaAbstracta**, **FabricaAzul** y **FabricaRoja**. También se incorpora **PelotaPequena** como parte de los archivos nuevos.
 
-La implementación final fue adaptada al juego **AventuraUSFX022026L4**, utilizando la clase base `APlataforma` y dos tipos concretos de plataformas:
-
-- `APlataformaIndestructible`
-- `APlataformaDestructible`
-
-El objetivo es centralizar la creación de plataformas dentro de un método fábrica. De esta forma, el `GameMode` ya no necesita decidir directamente qué clase concreta debe crear mediante llamadas separadas a `SpawnActor()`.
+El objetivo del patrón es trabajar con **familias de objetos relacionados** a través de una abstracción común, sin obligar al código cliente a depender directamente de cada clase concreta.
 
 ---
 
 ## 1. Objetivo
 
-Aplicar el patrón **Factory Method** dentro del juego para centralizar la creación de diferentes tipos de plataformas.
+Aplicar el patrón **Abstract Factory** dentro del juego, organizando la creación de productos mediante fábricas especializadas.
 
-Al iniciar la partida:
+La idea es que:
 
-- El `GameMode` genera una cantidad aleatoria de plataformas.
-- Se crean entre **5 y 20 plataformas**.
-- Para cada plataforma se selecciona aleatoriamente un tipo.
-- El `GameMode` llama al método fábrica `APlataforma::CrearPlataforma()`.
-- El método fábrica decide qué clase concreta debe crear.
-- Puede crear una `APlataformaIndestructible` o una `APlataformaDestructible`.
-- El objeto creado se devuelve como un puntero de tipo `APlataforma*`.
-- La plataforma creada se almacena en el `TArray` del `GameMode`.
+- Exista una abstracción común para las fábricas.
+- Puedan definirse distintas fábricas concretas, en este caso identificadas como **Azul** y **Roja**.
+- La responsabilidad de crear objetos se concentre en las fábricas.
+- El resto del programa pueda trabajar con las clases base o con las abstracciones correspondientes.
+- La implementación sea sencilla, compatible con **Unreal Engine 4.27.2** y fácil de explicar.
 
-La creación se realiza automáticamente desde `BeginPlay()`, por lo que no es necesario colocar manualmente las plataformas del patrón dentro del nivel.
+A diferencia de crear cada objeto desde cualquier parte del juego, el patrón propone **seleccionar una fábrica y solicitarle los productos que necesita el cliente**.
 
 ---
 
 ## 2. Implementación final
 
-Las clases principales relacionadas con el patrón son:
+Los archivos incorporados para esta práctica son:
 
-- `AAventuraUSFX022026L4GameMode`
-- `APlataforma`
-- `APlataformaIndestructible`
-- `APlataformaDestructible`
-
-La lógica principal del Factory Method se encuentra en:
-
-```cpp
-APlataforma::CrearPlataforma()
+```text
+FabricaAbstracta.h
+FabricaAbstracta.cpp
+FabricaAzul.h
+FabricaAzul.cpp
+FabricaRoja.h
+FabricaRoja.cpp
+PelotaPequena.h
+PelotaPequena.cpp
 ```
 
-Antes de aplicar el patrón, el `GameMode` decidía directamente qué clase concreta crear utilizando un `if` y llamadas separadas a `SpawnActor()`.
+También se modificó el archivo:
 
-La lógica anterior era conceptualmente:
-
-```cpp
-if (TipoAleatorio == 0)
-{
-    PlataformaActual =
-        World->SpawnActor<APlataformaIndestructible>(
-            SpawnLocation,
-            Rotacion,
-            Parametros
-        );
-}
-else
-{
-    PlataformaActual =
-        World->SpawnActor<APlataformaDestructible>(
-            SpawnLocation,
-            Rotacion,
-            Parametros
-        );
-}
+```text
+FabricaPlataformas.cpp
 ```
 
-Con la implementación actual, el `GameMode` solamente solicita la creación:
+La implementación conserva la continuidad del proyecto anterior, en el que ya existían:
 
-```cpp
-PlataformaActual = APlataforma::CrearPlataforma(
-    World,
-    TipoAleatorio,
-    SpawnLocation,
-    Rotacion
-);
-```
+- `APlataforma`, clase base de las plataformas.
+- `APlataformaIndestructible` y `APlataformaDestructible`.
+- `AFabricaPlataformas`, utilizada en la implementación de Factory Method.
+- `AAventuraUSFX022026L4GameMode`, responsable de iniciar la lógica del juego.
 
-De esta manera, la decisión de qué objeto concreto crear queda concentrada en un solo método.
+**Cambio principal:** pasar de concentrar la creación en una sola fábrica a trabajar con una organización que incorpora una fábrica abstracta y fábricas concretas.
 
 ---
 
-## 3. Clase Plataforma
+## 3. ¿Qué es Abstract Factory?
 
-`APlataforma` hereda de:
+**Abstract Factory** es un patrón de diseño creacional que proporciona una interfaz común para crear familias de productos relacionados sin que el cliente tenga que especificar directamente sus clases concretas.
 
-```cpp
-AActor
+Sus participantes habituales son:
+
+| Participante | Responsabilidad |
+|---|---|
+| Fábrica abstracta | Establece las operaciones de creación que las fábricas deben ofrecer. |
+| Fábricas concretas | Implementan la creación de una familia determinada de productos. |
+| Productos | Son los objetos que se obtienen a través de las fábricas. |
+| Cliente | Solicita productos a la fábrica y utiliza los objetos recibidos. |
+
+La diferencia esencial es que **una fábrica concreta representa una familia de productos**, no solamente una instrucción aislada para construir un objeto.
+
+---
+
+## 4. Fábrica abstracta
+
+La práctica incorpora:
+
+```text
+FabricaAbstracta.h
+FabricaAbstracta.cpp
 ```
 
-Esto permite que cada plataforma exista físicamente dentro del nivel de Unreal Engine.
+Estos archivos representan la parte común del diseño que permite organizar las fábricas especializadas.
 
-La clase base contiene la lógica general utilizada por las plataformas, por ejemplo:
+Conceptualmente, una fábrica abstracta establece **qué operaciones de creación deben estar disponibles**. Las fábricas concretas se encargan de dar a esas operaciones el comportamiento correspondiente a su familia.
 
-- Malla de la plataforma.
-- Posición.
-- Dirección.
-- Velocidad.
-- Límites de movimiento.
-- Configuración de movimiento.
-- `BeginPlay()`.
-- `Tick()`.
-- Inicio y detención del movimiento.
+Esta separación permite explicar dos responsabilidades distintas:
 
-Además, contiene el método utilizado como fábrica:
+```text
+Fábrica abstracta
+    → define el contrato común de creación.
+
+Fábrica concreta
+    → proporciona la creación de su familia.
+```
+
+No se debe confundir la **fábrica** con el **producto**: la primera crea objetos; el segundo es el objeto obtenido.
+
+---
+
+## 5. Fábrica Azul
+
+La primera fábrica concreta añadida se encuentra en:
+
+```text
+FabricaAzul.h
+FabricaAzul.cpp
+```
+
+Su nombre identifica la variante **Azul** dentro de la organización de las fábricas.
+
+En el patrón Abstract Factory, una fábrica concreta tiene la responsabilidad de suministrar productos de su familia según las operaciones definidas por la abstracción común.
+
+El punto importante para la defensa es:
+
+**No es el cliente quien necesita conocer todos los detalles de creación de la familia Azul; esa responsabilidad corresponde a la fábrica.**
+
+---
+
+## 6. Fábrica Roja
+
+La segunda fábrica concreta añadida se encuentra en:
+
+```text
+FabricaRoja.h
+FabricaRoja.cpp
+```
+
+Su nombre identifica la variante **Roja**.
+
+La existencia de dos fábricas concretas permite estudiar cómo se organiza una misma operación de creación para distintas familias de objetos.
+
+Conceptualmente:
+
+```text
+Fábrica Abstracta
+       |
+       +---- Fábrica Azul
+       |
+       +---- Fábrica Roja
+```
+
+La ventaja buscada es poder elegir una familia sin duplicar la lógica de creación en todas las clases que solicitan productos.
+
+---
+
+## 7. Clase PelotaPequena
+
+La práctica también agrega:
+
+```text
+PelotaPequena.h
+PelotaPequena.cpp
+```
+
+Este es uno de los elementos nuevos respecto de la versión anterior de Factory Method.
+
+La separación entre archivos `.h` y `.cpp` mantiene la estructura habitual de C++ en Unreal Engine:
+
+- **`.h`**: declaraciones de clase, atributos y funciones.
+- **`.cpp`**: implementación de constructor y funciones.
+
+En la documentación del patrón, es importante distinguir **los archivos de las fábricas** de **los archivos de los productos**. `PelotaPequena` forma parte de los nuevos elementos de producto del proyecto; su relación concreta con cada fábrica depende de las funciones implementadas en el código.
+
+---
+
+## 8. Relación con las plataformas existentes
+
+El proyecto ya utilizaba la clase base:
 
 ```cpp
-static APlataforma* CrearPlataforma(
-    UWorld* World,
+APlataforma
+```
+
+y tipos concretos como:
+
+```cpp
+APlataformaIndestructible
+APlataformaDestructible
+```
+
+Estas clases pertenecen al trabajo desarrollado anteriormente sobre plataformas y Factory Method.
+
+La clase base `APlataforma` permite tratar diferentes clases de plataforma mediante un mismo tipo de puntero:
+
+```cpp
+APlataforma* PlataformaActual;
+```
+
+Esto se relaciona con la **herencia y el polimorfismo** de C++.
+
+La introducción de fábricas concretas no elimina la utilidad de las clases base: al contrario, las abstracciones ayudan a trabajar con productos sin que todas las partes del programa dependan de sus tipos concretos.
+
+---
+
+## 9. Evolución desde Factory Method
+
+### Implementación anterior
+
+En Factory Method se creó una clase específica:
+
+```cpp
+AFabricaPlataformas
+```
+
+Su método de creación recibía un tipo, una posición y una rotación, y devolvía un puntero a la clase base:
+
+```cpp
+APlataforma* CrearPlataforma(
     int Tipo,
     const FVector& Posicion,
     const FRotator& Rotacion
 );
 ```
 
-El tipo de retorno es:
+La implementación anterior decidía entre las plataformas destructibles e indestructibles con una condición sobre `Tipo`.
 
-```cpp
-APlataforma*
+### Nueva práctica
+
+En Abstract Factory aparecen estas piezas adicionales:
+
+```text
+FabricaAbstracta
+FabricaAzul
+FabricaRoja
+PelotaPequena
 ```
 
-Esto permite que el mismo método pueda devolver objetos de clases hijas de `APlataforma`.
+Así, el ejercicio ya no se limita a explicar **un método que decide qué plataforma crear**, sino que introduce el concepto de **fábricas concretas asociadas a diferentes familias**.
+
+**Factory Method** se centra en delegar la creación de un producto.
+
+**Abstract Factory** organiza la creación de familias de productos relacionados mediante una interfaz común.
 
 ---
 
-## 4. Productos concretos
+## 10. Flujo conceptual de Abstract Factory
 
-Los dos productos concretos utilizados actualmente por el método fábrica son:
+El flujo general del patrón puede representarse de esta forma:
 
-### Plataforma Indestructible
-
-```cpp
-class APlataformaIndestructible : public APlataforma
+```text
+               INICIO DEL JUEGO
+                       |
+                       v
+              CÓDIGO CLIENTE
+                       |
+                       v
+              Selecciona fábrica
+                       |
+                       v
+               FÁBRICA ABSTRACTA
+                       |
+          +------------+------------+
+          |                         |
+          v                         v
+     FÁBRICA AZUL              FÁBRICA ROJA
+          |                         |
+          v                         v
+  Productos de su familia   Productos de su familia
+          |                         |
+          +------------+------------+
+                       |
+                       v
+             OBJETOS DEL JUEGO
 ```
 
-Hereda de `APlataforma`.
-
-Visualmente utiliza:
-
-```cpp
-TEXT("StaticMesh'/Game/StarterContent/Shapes/Shape_Cube.Shape_Cube'")
-```
-
-y el material:
-
-```cpp
-TEXT("Material'/Game/MaterialesPaintball/M_PlataformaAzul.M_PlataformaAzul'")
-```
-
-Por lo tanto, la plataforma indestructible se identifica mediante el material azul.
-
-### Plataforma Destructible
-
-```cpp
-class APlataformaDestructible : public APlataforma
-```
-
-También hereda de `APlataforma`.
-
-Utiliza la misma malla de cubo, pero con el material:
-
-```cpp
-TEXT("Material'/Game/MaterialesPaintball/M_PlataformaRoja.M_PlataformaRoja'")
-```
-
-La plataforma destructible se identifica mediante el material rojo.
-
-Además, registra el evento:
-
-```cpp
-mallaPlataforma->OnComponentHit.AddDynamic(
-    this,
-    &APlataformaDestructible::AlRecibirImpacto
-);
-```
-
-Cuando recibe un impacto de un componente cuyo perfil de colisión es `Projectile`, ejecuta:
-
-```cpp
-Destroy();
-```
-
-Por tanto:
-
-- Azul → plataforma indestructible.
-- Roja → plataforma destructible.
+**Nota:** este diagrama describe el diseño del patrón y sus participantes. Las llamadas específicas del proyecto se encuentran en las clases C++ de la implementación.
 
 ---
 
-## 5. Método Factory Method
+## 11. Integración con GameMode
 
-La lógica principal se encuentra dentro de:
-
-```cpp
-APlataforma* APlataforma::CrearPlataforma(
-    UWorld* World,
-    int Tipo,
-    const FVector& Posicion,
-    const FRotator& Rotacion
-)
-```
-
-Primero se comprueba que exista un mundo válido:
+El proyecto utiliza:
 
 ```cpp
-if (World == nullptr)
-{
-    return nullptr;
-}
+AAventuraUSFX022026L4GameMode
 ```
 
-Después se crean los parámetros utilizados para generar el actor:
+como punto de entrada de buena parte de la lógica del nivel.
 
-```cpp
-FActorSpawnParameters Parametros;
-
-Parametros.SpawnCollisionHandlingOverride =
-    ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-```
-
-Luego el método decide qué producto concreto crear.
-
-Si:
-
-```cpp
-Tipo == 0
-```
-
-se crea:
-
-```cpp
-return World->SpawnActor<APlataformaIndestructible>(
-    Posicion,
-    Rotacion,
-    Parametros
-);
-```
-
-En caso contrario se crea:
-
-```cpp
-return World->SpawnActor<APlataformaDestructible>(
-    Posicion,
-    Rotacion,
-    Parametros
-);
-```
-
-El punto importante es que ambas clases se devuelven como:
-
-```cpp
-APlataforma*
-```
-
-porque ambas heredan de `APlataforma`.
-
----
-
-## 6. Inicio automático desde GameMode
-
-La creación de las plataformas se realiza dentro de:
-
-```cpp
-AAventuraUSFX022026L4GameMode::BeginPlay()
-```
-
-Primero se obtiene el mundo:
+En la implementación anterior de Factory Method, su `BeginPlay()` obtenía el mundo mediante:
 
 ```cpp
 UWorld* World = GetWorld();
 ```
 
-y se comprueba:
+y utilizaba `SpawnActor()` para crear la fábrica que gestionaba las plataformas.
 
-```cpp
-if (World == nullptr)
-{
-    return;
-}
-```
-
-Después se prepara una lista de posiciones disponibles dentro del escenario:
-
-```cpp
-TArray<FVector> PosicionesDisponibles;
-```
-
-Las posiciones se generan utilizando dos ciclos:
-
-```cpp
-for (int X = 350; X <= 750; X += 130)
-{
-    for (int Y = -350; Y <= 350; Y += 175)
-    {
-        PosicionesDisponibles.Add(
-            FVector(X, Y, 160.0f)
-        );
-    }
-}
-```
-
-La cantidad de plataformas es aleatoria:
-
-```cpp
-int CantidadPlataformas = FMath::RandRange(5, 20);
-```
-
-El `TArray` principal reserva espacio para esa cantidad:
-
-```cpp
-aPlataformas.Reserve(CantidadPlataformas);
-```
-
-Después comienza la creación:
-
-```cpp
-for (int i = 0; i < CantidadPlataformas; i++)
-```
-
-Para cada plataforma se selecciona una posición aleatoria:
-
-```cpp
-int IndiceAleatorio =
-    FMath::RandRange(0, PosicionesDisponibles.Num() - 1);
-
-FVector SpawnLocation =
-    PosicionesDisponibles[IndiceAleatorio];
-```
-
-También se selecciona aleatoriamente el tipo:
-
-```cpp
-int TipoAleatorio = FMath::RandRange(0, 1);
-```
-
-Finalmente, el `GameMode` llama al método fábrica:
-
-```cpp
-PlataformaActual = APlataforma::CrearPlataforma(
-    World,
-    TipoAleatorio,
-    SpawnLocation,
-    Rotacion
-);
-```
-
-Si la plataforma fue creada correctamente:
-
-```cpp
-if (IsValid(PlataformaActual))
-{
-    aPlataformas.Add(PlataformaActual);
-}
-```
-
-La posición utilizada se elimina del arreglo:
-
-```cpp
-PosicionesDisponibles.RemoveAt(IndiceAleatorio);
-```
-
-Esto evita utilizar nuevamente la misma posición durante esa generación.
-
----
-
-## 7. Flujo general
-
-```text
-PLAY
- |
- v
-GameMode::BeginPlay()
- |
- v
-Genera posiciones disponibles
- |
- v
-Selecciona entre 5 y 20 plataformas
- |
- v
-Selecciona TipoAleatorio
- |
- v
-APlataforma::CrearPlataforma()
- |
- +-----------------------------------+
- |                                   |
- v                                   v
-Tipo == 0                        Tipo != 0
- |                                   |
- v                                   v
-APlataformaIndestructible       APlataformaDestructible
- |                                   |
- +----------------+------------------+
-                  |
-                  v
-            APlataforma*
-                  |
-                  v
-       Se guarda en aPlataformas
-```
-
-Resultado:
+El cambio que introduce Abstract Factory debe entenderse dentro de esa misma organización del juego:
 
 ```text
 GameMode
-   ↓
-solicita una plataforma
-   ↓
-Factory Method
-   ↓
-decide el tipo concreto
-   ↓
-crea el objeto
-   ↓
-devuelve APlataforma*
+    → coordina cuándo hacen falta objetos.
+
+Fábricas
+    → concentran la responsabilidad de crearlos.
+
+Productos
+    → son los objetos utilizados en el nivel.
 ```
+
+De esta manera se conserva la separación entre **coordinar la partida** y **crear los distintos productos**.
 
 ---
 
-## 8. Comprobación
+## 12. Archivos principales
 
-Al ejecutar el proyecto se debe observar que aparecen entre **5 y 20 plataformas**.
-
-Las plataformas pueden ser de dos tipos:
-
-```text
-Plataforma azul
-→ APlataformaIndestructible
-
-Plataforma roja
-→ APlataformaDestructible
-```
-
-La selección se realiza de forma aleatoria mediante:
-
-```cpp
-FMath::RandRange(0, 1);
-```
-
-También se puede comprobar el comportamiento de la plataforma destructible.
-
-Cuando recibe el impacto de un componente con perfil:
-
-```cpp
-Projectile
-```
-
-la plataforma roja ejecuta:
-
-```cpp
-Destroy();
-```
-
-La plataforma azul no contiene esa lógica de destrucción por impacto.
-
-También se puede comprobar en el **World Outliner** que los actores creados corresponden a las clases concretas generadas por el método fábrica.
-
----
-
-## 9. ¿Por qué se inicia desde GameMode?
-
-La creación se realiza desde el `GameMode` porque:
-
-- Su `BeginPlay()` se ejecuta automáticamente al comenzar la partida.
-- Ya administra el arreglo de plataformas del proyecto.
-- Permite generar todas las plataformas desde un punto central.
-- Evita colocar manualmente cada plataforma dentro del mapa.
-- El `GameMode` solicita objetos, pero la decisión concreta de creación se delega al método fábrica.
-
-La responsabilidad queda separada de forma sencilla:
-
-```text
-GameMode
-→ decide cuándo y dónde necesita una plataforma.
-
-APlataforma::CrearPlataforma()
-→ decide qué clase concreta crear.
-
-APlataformaIndestructible / APlataformaDestructible
-→ representan los productos concretos.
-```
-
----
-
-## 10. Archivos principales
+La estructura de archivos relevantes es:
 
 ```text
 Source/AventuraUSFX022026L4/
 │
 ├── AventuraUSFX022026L4GameMode.h
 ├── AventuraUSFX022026L4GameMode.cpp
+│
+├── FabricaAbstracta.h
+├── FabricaAbstracta.cpp
+│
+├── FabricaAzul.h
+├── FabricaAzul.cpp
+│
+├── FabricaRoja.h
+├── FabricaRoja.cpp
+│
+├── PelotaPequena.h
+├── PelotaPequena.cpp
+│
+├── FabricaPlataformas.h
+├── FabricaPlataformas.cpp
+│
 ├── Plataforma.h
 ├── Plataforma.cpp
+│
 ├── PlataformaIndestructible.h
 ├── PlataformaIndestructible.cpp
+│
 ├── PlataformaDestructible.h
 └── PlataformaDestructible.cpp
 ```
 
-### AventuraUSFX022026L4GameMode.h
+**Funciones de los grupos de archivos:**
 
-Contiene el arreglo de plataformas:
-
-```cpp
-UPROPERTY()
-TArray<APlataforma*> aPlataformas;
-```
-
-### AventuraUSFX022026L4GameMode.cpp
-
-Contiene:
-
-- `BeginPlay()`.
-- Generación de posiciones.
-- Cantidad aleatoria de plataformas.
-- Selección aleatoria del tipo.
-- Llamada a `APlataforma::CrearPlataforma()`.
-- Almacenamiento de los objetos creados.
-
-### Plataforma.h
-
-Declara:
-
-- La clase base `APlataforma`.
-- Variables de movimiento.
-- `ConfigurarMovimiento()`.
-- `IniciarMovimiento()`.
-- `DetenerMovimiento()`.
-- El método estático `CrearPlataforma()`.
-
-### Plataforma.cpp
-
-Contiene:
-
-- Constructor de la plataforma.
-- Configuración de la malla.
-- Movimiento de la plataforma.
-- `BeginPlay()`.
-- `Tick()`.
-- Implementación de `CrearPlataforma()`.
-
-### PlataformaIndestructible.h / .cpp
-
-Contiene:
-
-- Clase hija de `APlataforma`.
-- Malla de cubo.
-- Material azul.
-- Configuración de colisión.
-
-### PlataformaDestructible.h / .cpp
-
-Contiene:
-
-- Clase hija de `APlataforma`.
-- Malla de cubo.
-- Material rojo.
-- Evento `OnComponentHit`.
-- Método `AlRecibirImpacto()`.
-- Destrucción cuando recibe un impacto de tipo `Projectile`.
+- **`FabricaAbstracta`**: abstracción común del sistema de fábricas.
+- **`FabricaAzul` y `FabricaRoja`**: variantes concretas de la fábrica.
+- **`PelotaPequena`**: nuevo tipo de objeto incorporado a la práctica.
+- **`FabricaPlataformas`**: clase de creación que ya existía en el laboratorio anterior y fue modificada.
+- **`Plataforma` y clases hijas**: objetos relacionados con el sistema de plataformas.
+- **`GameMode`**: coordinación general del juego.
 
 ---
 
-## 11. Conceptos utilizados
+## 13. Comprobación de la implementación
+
+Para verificar el trabajo en Unreal Engine 4.27.2:
+
+1. Abrir `AventuraUSFX022026L4.uproject`.
+2. Compilar el proyecto C++ y confirmar que no existan errores.
+3. Abrir el nivel configurado para el juego.
+4. Presionar **Play**.
+5. Comprobar que se crean los objetos esperados mediante la lógica de las fábricas.
+6. Revisar el **World Outliner** para identificar los actores generados.
+7. Probar la variante **Azul** y la variante **Roja** de acuerdo con las llamadas presentes en el código.
+8. Comprobar que los productos corresponden a la fábrica seleccionada y que las clases originales siguen funcionando.
+
+La prueba debe demostrar **la relación entre la fábrica elegida y los productos creados**, no solamente que el proyecto compila.
+
+---
+
+## 14. Conceptos utilizados y relación con los libros
 
 ### C++ y Programación Orientada a Objetos
 
-- Clases.
-- Objetos.
+- Clases y objetos.
 - Herencia.
-- Clase padre.
-- Clases hijas.
+- Abstracción.
+- Encapsulamiento.
+- Polimorfismo.
+- Clases base y derivadas.
 - Métodos.
-- Métodos estáticos.
+- Constructores.
 - Punteros.
-- Parámetros.
-- `return`.
-- `if / else`.
-- Polimorfismo mediante punteros a la clase base.
-- Patrón Factory Method.
+- Declaraciones en `.h` e implementaciones en `.cpp`.
+- Patrones de diseño creacionales.
 
 ### Unreal Engine 4.27.2
 
 - `AActor`.
 - `AGameModeBase`.
-- `BeginPlay()`.
-- `Tick()`.
 - `UWorld`.
 - `GetWorld()`.
+- `BeginPlay()`.
 - `SpawnActor()`.
-- `FActorSpawnParameters`.
-- `ESpawnActorCollisionHandlingMethod::AlwaysSpawn`.
-- `TArray`.
-- `FVector`.
-- `FRotator`.
-- `FMath::RandRange()`.
-- `IsValid()`.
-- `Destroy()`.
-- `UStaticMeshComponent`.
-- `CreateDefaultSubobject()`.
-- `ConstructorHelpers::FObjectFinder`.
-- `OnComponentHit`.
-- `AddDynamic()`.
-- `UPROPERTY`.
-- `UFUNCTION`.
+- Actores y componentes.
+- Clases C++ dentro de un proyecto Unreal.
+
+### Relación con los libros
+
+El patrón **Abstract Factory** pertenece al grupo de **patrones de creación** descrito por Erich Gamma, Richard Helm, Ralph Johnson y John Vlissides en *Patrones de diseño: elementos de software orientado a objetos reutilizable*.
+
+El libro *Sumérgete en los patrones de diseño*, de Alexander Shvets, también explica **Fábrica Abstracta** y su función en la creación de familias de objetos relacionados.
+
+La adaptación a **AventuraUSFX022026L4** traslada estos conceptos teóricos al entorno de C++ y Unreal Engine 4.27.2.
 
 ---
 
-## 12. Relación con el libro
+## 15. Resultado, tecnologías y repositorio
 
-El libro presenta Factory Method mediante un sistema de tiendas de pociones.
-
-Su ejemplo utiliza conceptos como:
+La práctica amplía la implementación anterior de **Factory Method** mediante una estructura de **Abstract Factory**, incorporando:
 
 ```text
-Creator
-Concrete Creator
-Product
-Concrete Product
+FabricaAbstracta
+FabricaAzul
+FabricaRoja
+PelotaPequena
 ```
 
-La idea principal es que el código que solicita un objeto no tenga que encargarse directamente de todos los detalles de creación.
+Esto permite estudiar la creación de objetos desde el punto de vista de una **abstracción común** y de **fábricas concretas**.
 
-En el proyecto se conserva esa idea central:
+**Tecnologías utilizadas:**
 
-```text
-GameMode
-      ↓
-Solicita una plataforma
-      ↓
-APlataforma::CrearPlataforma()
-      ↓
-Decide qué producto concreto crear
-      ↓
-APlataformaIndestructible
-            o
-APlataformaDestructible
-      ↓
-Devuelve APlataforma*
-```
+- Unreal Engine 4.27.2.
+- C++.
+- Visual Studio.
+- Git.
+- GitHub.
 
-La adaptación realizada es más sencilla que la estructura completa presentada en el libro.
+**Repositorio del Grupo 4:**
 
-En lugar de crear varias clases creadoras diferentes, se utiliza un método estático dentro de `APlataforma`:
-
-```cpp
-static APlataforma* CrearPlataforma(...);
-```
-
-Esto mantiene el código acorde al nivel del laboratorio y permite concentrar la decisión de creación en un único lugar.
-
-Antes:
-
-```text
-GameMode
-→ sabía qué clase concreta debía crear.
-```
-
-Después:
-
-```text
-GameMode
-→ solicita una plataforma.
-
-CrearPlataforma()
-→ decide cuál crear.
-```
-
----
-
-## 13. Resultado
-
-El patrón Factory Method quedó integrado al proyecto.
-
-Al presionar **Play**, el `GameMode` genera automáticamente entre **5 y 20 plataformas**.
-
-Para cada plataforma se selecciona aleatoriamente uno de los dos tipos disponibles y se llama:
-
-```cpp
-APlataforma::CrearPlataforma()
-```
-
-El método fábrica crea:
-
-```text
-Tipo 0
-→ APlataformaIndestructible
-
-Tipo 1
-→ APlataformaDestructible
-```
-
-El objeto concreto se devuelve como:
-
-```cpp
-APlataforma*
-```
-
-y se almacena dentro de:
-
-```cpp
-TArray<APlataforma*> aPlataformas;
-```
-
-El resultado final es:
-
-```text
-El GameMode ya no crea directamente cada clase concreta.
-                         ↓
-La creación se concentra en CrearPlataforma().
-                         ↓
-El método fábrica selecciona el producto concreto.
-                         ↓
-El juego puede trabajar con ambos tipos mediante APlataforma*.
-```
-
----
-
-## 14. Tecnologías utilizadas
-
-- Unreal Engine 4.27.2
-- C++
-- Visual Studio
-- Git
-- GitHub
-
----
-
-## 15. Repositorio
-
-https://github.com/sebaslopezhurtado15/Lab-G4-PATRONES-Factory-Method
+https://github.com/sebaslopezhurtado15/Lab-G4-PATRONES-Abstract-Factory
